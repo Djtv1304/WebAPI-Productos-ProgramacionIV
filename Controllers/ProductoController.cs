@@ -31,11 +31,22 @@ namespace WebAPI_Productos_ProgramacionIV.Controllers
         }
 
         // GET api/<Producto2Controller>/5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+        [HttpGet("{IdProducto}")]
+        public async Task<IActionResult> Get(int IdProducto)
         {
+            /*
+                First or Default: Manda el objeto correcto o si no manda un objeto nulo (Busca arreglo de datos)
+                Single or Default: Manda el objeto correcto o si no manda un objeto nulo (Busca un solo dato)
 
-            Producto foundedProduct = await _db.Producto.FindAsync(id);
+                DBContext representa y me muevo a la base de datos
+                DbContext e invocando a Producto represento y me muevo mediante la tabla
+             */
+
+            // Opcion 1 de búsqueda
+            // Producto foundedProduct = await _db.Producto.FindAsync(IdProducto);
+
+            // Opción 2 de búsqueda
+            Producto foundedProduct = await _db.Producto.FirstOrDefaultAsync( x => x.IdProducto == IdProducto );
 
             if (foundedProduct == null)
             {
@@ -49,7 +60,11 @@ namespace WebAPI_Productos_ProgramacionIV.Controllers
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Producto newProduct)
         {
-            if (newProduct == null) 
+
+            // En caso de que el framework no valide que ya exista un ID que ya existe debemos validar nosotros
+            Producto foundedProduct = await _db.Producto.FirstOrDefaultAsync(x => x.IdProducto == newProduct.IdProducto);
+
+            if (newProduct == null || foundedProduct != null) 
             {
 
                 return BadRequest();
@@ -64,22 +79,26 @@ namespace WebAPI_Productos_ProgramacionIV.Controllers
         }
 
         // PUT api/<Producto2Controller>/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody] Producto newProductToReplace)
+        [HttpPut("{IdProducto}")]
+        public async Task<IActionResult> Put(int IdProducto, [FromBody] Producto newProduct)
         {
+            // Forma 1 de buscar
+            //Producto productToReplace = await _db.Producto.FindAsync(IdProducto);
 
-            Producto productToReplace = await _db.Producto.FindAsync(id);
+            // Forma 2 de buscar
+            Producto productToReplace = await _db.Producto.FirstOrDefaultAsync(x => x.IdProducto == IdProducto);
 
-            if (newProductToReplace == null || productToReplace == null)
+            if (newProduct == null || productToReplace == null)
             {
 
                 return BadRequest();
 
             }
 
-            productToReplace.Nombre = newProductToReplace.Nombre;
-            productToReplace.Descripcion = newProductToReplace.Descripcion;
-            productToReplace.Cantidad = newProductToReplace.Cantidad;
+            // Valido los datos mediante operadores ternarios
+            productToReplace.Nombre = newProduct.Nombre != null ? newProduct.Nombre : productToReplace.Nombre;
+            productToReplace.Descripcion = newProduct.Descripcion != null ? newProduct.Descripcion : productToReplace.Descripcion;
+            productToReplace.Cantidad = newProduct.Cantidad != null ? newProduct.Cantidad : productToReplace.Cantidad;
 
             /* 
                 DBContext rastrea los objetos que devuelve en una consulta y si se cambiaron las propiedades
@@ -93,11 +112,14 @@ namespace WebAPI_Productos_ProgramacionIV.Controllers
         }
 
         // DELETE api/<Producto2Controller>/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        [HttpDelete("{IdProducto}")]
+        public async Task<IActionResult> Delete(int IdProducto)
         {
+            // Forma 1 de buscar
+            //Producto productToDelete = await _db.Producto.FindAsync(IdProducto);
 
-            Producto productToDelete = await _db.Producto.FindAsync(id);
+            // Forma 2 de buscar
+            Producto productToDelete = await _db.Producto.FirstOrDefaultAsync(x => x.IdProducto == IdProducto);
 
             if (productToDelete == null)
             {
@@ -110,7 +132,7 @@ namespace WebAPI_Productos_ProgramacionIV.Controllers
 
             await _db.SaveChangesAsync();
 
-            return Ok();
+            return Ok("Producto eliminado correctamente");
         }
     }
 }
